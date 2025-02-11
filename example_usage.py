@@ -1,18 +1,40 @@
-from Lagrangian_function import find_optimal_points, compute_hessian_at_optimum
 import sympy as sp
+import numpy as np
+from Lagrangian_function import construct_lagrangian, newtons_method, find_optimal_points, compute_hessian_at_optimum
 
-# Example Usage:
+# Define symbolic variables
 x1, x2, x3 = sp.symbols('x1 x2 x3')
+x = sp.Matrix([x1, x2, x3])  # Column vector for symbolic computation
 
-# Define objective function
-f = 3*x1**2 + 2*x1*x2 + x1*x3 + 2.5*x2**2 + 2*x2*x3 + 2*x3**2 - 8*x1 - 3*x2 - 3*x3
+# Define Hessian matrix (Quadratic term in the objective function)
+H = sp.Matrix([[6, 2, 1], 
+               [2, 5, 2], 
+               [1, 2, 4]])
 
-# Define equality constraints
-constraints_eq = [x1 + x3 - 3, x2 + x3]  # Only equality constraints
+# Define linear term in the objective function
+g = sp.Matrix([-8, -3, -3])
 
-# Compute solution
-solution, L, variables = find_optimal_points(f, constraints_eq)
+# Define equality constraint coefficients
+A = sp.Matrix([[1, 0, 1], 
+               [0, 1, 1]])  # Constraint coefficients
 
+b = sp.Matrix([3, 0])  # Right-hand side of equality constraints
+
+# Define equality constraints in matrix-vector form
+constraints_eq = A @ x - b  # Matrix multiplication using @
+
+# Define the quadratic objective function in standard form
+f = (1/2) * x.T @ H @ x + g.T @ x  # Quadratic form: 1/2 x' H x + g' x
+
+# Display results
+print("Objective function:")
+sp.pretty_print(f)
+
+print("\nEquality Constraints:")
+sp.pretty_print(constraints_eq)
+
+#use the function construct_lagrangian from Lagrangian_function.py
+solution , L , variables = find_optimal_points(f, constraints_eq)
 if solution is not None:
     # Compute Hessian and eigenvalues at the optimal point
     H_eval, eigenvalues, classification = compute_hessian_at_optimum(L, variables, solution)
