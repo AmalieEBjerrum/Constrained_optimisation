@@ -11,6 +11,10 @@ def construct_lagrangian(f, constraints_eq=[]):
     # Define Lagrange multipliers for equality constraints
     lambdas_eq = [sp.Symbol(f"λ{i+1}") for i in range(len(constraints_eq))]
 
+    # Ensure `f` is a scalar expression (extract first element if f is a matrix)
+    if isinstance(f, sp.Matrix) and f.shape == (1, 1):  # Check if f is a 1x1 matrix
+        f = f[0]  # Extract scalar from matrix
+
     # Construct the Lagrangian function
     L = f + sum(lambdas_eq[i] * constraints_eq[i] for i in range(len(constraints_eq)))
 
