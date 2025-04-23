@@ -2,6 +2,8 @@ import numpy as np
 from scipy.linalg import lu_factor, lu_solve, ldl
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import splu, spsolve
+from sksparse.cholmod import cholesky
+from scipy.sparse import bmat, csc_matrix
 
 
 def EqualityQPSolverLUdense(H, g, A, b):
@@ -52,9 +54,29 @@ def EqualityQPSolverLDLdense(H, g, A, b):
     lam = sol[n:]
     return x, lam
 
-
 def EqualityQPSolverLDLsparse(H, g, A, b):
-    raise NotImplementedError("Sparse LDL not implemented – consider using specialized libraries like scikit-sparse.")
+    n = H.shape[0]
+    m = A.shape[0]
+
+    # Construct sparse KKT matrix
+    H_sparse = csc_matrix(H)
+    A_sparse = csc_matrix(A)
+    zero_block = csc_matrix((m, m))
+
+    KKT = bmat([
+        [H_sparse, -A_sparse.T],
+        [A_sparse, zero_block]
+    ], format='csc')
+
+    rhs = np.concatenate([-g, b])
+
+    # Solve using sparse LDLᵗ
+    factor = cholesky(KKT)
+    sol = factor(rhs)
+
+    x = sol[:n]
+    lam = sol[n:]
+    return x, lam
 
 
 def EqualityQPSolverRangeSpace(H, g, A, b):
